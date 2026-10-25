@@ -37,6 +37,8 @@ export function createInitialCircuit(layout: Layout): Circuit {
   addElementToBar(circuit, layout, 'AND', spawnBuiltin('AND'));
   addElementToBar(circuit, layout, 'NOT', spawnBuiltin('NOT'));
   addElementToBar(circuit, layout, 'XOR', spawnBuiltin('XOR'));
+  addElementToBar(circuit, layout, 'BIT', spawnBuiltin('BIT'));
+  addElementToBar(circuit, layout, 'ADD2', spawnBuiltin('ADD2'));
   return circuit;
 }
 

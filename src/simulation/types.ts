@@ -1,4 +1,5 @@
-export type BuiltinKind = 'AND' | 'OR' | 'NOT' | 'XOR';
+export type CombinationalKind = 'AND' | 'OR' | 'NOT' | 'XOR';
+export type BuiltinKind = CombinationalKind | 'BIT' | 'ADD2';
 export type ElementKind = BuiltinKind | 'CUSTOM';
 
 export interface SinkPort {
@@ -30,10 +31,14 @@ export interface FieldOutput extends SinkPort {
 
 export interface GateInput extends SinkPort {
   kind: 'gate-input';
+  /** Short name drawn inside the gate. Empty when the pin is unlabeled. */
+  label: string;
 }
 
 export interface GateOutput extends SourcePort {
   kind: 'gate-output';
+  /** Short name drawn inside the gate. Empty when the pin is unlabeled. */
+  label: string;
 }
 
 export type IoNode = FieldInput | FieldOutput | GateInput | GateOutput;
@@ -54,6 +59,11 @@ export interface LogicElement {
   outputsCount: number;
   combinations: boolean[][];
   results: boolean[][];
+  /**
+   * Bit remembered by a BIT latch between simulation ticks.
+   * Combinational elements leave this false.
+   */
+  storedBit: boolean;
 }
 
 /** Toolbar factories return a gate, or false when a custom element does not fit. */

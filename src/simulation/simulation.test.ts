@@ -10,7 +10,7 @@ import {
   removeFieldInput,
   removeFieldOutput,
 } from './field-io';
-import { createBuiltinElement, instantiateCustom } from './gates';
+import { createBuiltinElement, driveSource, instantiateCustom } from './gates';
 import { createInitialCircuit } from './circuit';
 import {
   confirmCreatingElement,
@@ -96,6 +96,8 @@ describe('field pins', () => {
       ['AND', 332, 102, 750, 40],
       ['NOT', 454, 102, 750, 40],
       ['XOR', 576, 102, 750, 40],
+      ['BIT', 698, 102, 750, 40],
+      ['ADD2', 820, 126, 750, 40],
     ]);
   });
 
@@ -429,6 +431,101 @@ describe('pointer interaction', () => {
   });
 });
 
+describe('built-in blocks', () => {
+  it('places a BIT latch, holds its bit across ticks, then moves and deletes it', () => {
+    const { circuit, session } = fresh();
+    const bit = place(circuit, session, 'BIT', 400, 200);
+    expect(bit.kind).toBe('BIT');
+    expect(bit.inputs.map((pin) => pin.label)).toEqual(['D', 'EN']);
+    expect(bit.outputs.map((pin) => pin.label)).toEqual(['Q']);
+    expect(bit.storedBit).toBe(false);
+
+    wire(circuit, session, circuit.inputs[0], bit.inputs[0]);
+    wire(circuit, session, circuit.inputs[1], bit.inputs[1]);
+    wire(circuit, session, bit.outputs[0], circuit.outputs[0]);
+
+    pointerDown(circuit, layout, session, circuit.inputs[0].fieldX, circuit.inputs[0].y);
+    pointerDown(circuit, layout, session, circuit.inputs[1].fieldX, circuit.inputs[1].y);
+    stepSimulation(circuit);
+    expect(bit.storedBit).toBe(true);
+    expect(circuit.outputs[0].signaled).toBe(true);
+
+    pointerDown(circuit, layout, session, circuit.inputs[1].fieldX, circuit.inputs[1].y);
+    pointerDown(circuit, layout, session, circuit.inputs[0].fieldX, circuit.inputs[0].y);
+    for (let tick = 0; tick < 4; tick++) {
+      stepSimulation(circuit);
+    }
+    expect(bit.inputs.map((pin) => pin.signaled)).toEqual([false, false]);
+    expect(bit.storedBit).toBe(true);
+    expect(bit.outputs[0].signaled).toBe(true);
+    expect(circuit.outputs[0].signaled).toBe(true);
+
+    pointerDown(circuit, layout, session, bit.x + bit.width / 2, bit.y + bit.height / 2);
+    expect(circuit.selectedElement).toBe(bit);
+    pointerMove(circuit, layout, session, bit.x + bit.width / 2 + 30, bit.y + bit.height / 2 + 20);
+    expect(bit.x).toBe(430);
+    expect(bit.y).toBe(220);
+    expect(bit.inputs[0].x).toBe(430);
+
+    deleteSelection(circuit);
+    expect(circuit.elements).toHaveLength(0);
+    expect(circuit.inputs[0].next).toHaveLength(0);
+    expect(circuit.inputs[1].next).toHaveLength(0);
+    expect(circuit.outputs[0].prev).toBeNull();
+    expect(circuit.outputs[0].signaled).toBe(false);
+  });
+
+  it('places an ADD2 block and adds two 2-bit numbers', () => {
+    const { circuit, session } = fresh();
+    addFieldInput(circuit, layout);
+    addFieldInput(circuit, layout);
+    addFieldInput(circuit, layout);
+    addFieldOutput(circuit, layout);
+    addFieldOutput(circuit, layout);
+    expect(circuit.inputs).toHaveLength(5);
+    expect(circuit.outputs).toHaveLength(3);
+
+    const adder = place(circuit, session, 'ADD2', 400, 180);
+    expect(adder.kind).toBe('ADD2');
+    expect(adder.inputs.map((pin) => pin.label)).toEqual(['A1', 'A0', 'B1', 'B0', 'Cin']);
+    expect(adder.outputs.map((pin) => pin.label)).toEqual(['S1', 'S0', 'Cout']);
+
+    for (let i = 0; i < adder.inputs.length; i++) {
+      wire(circuit, session, circuit.inputs[i], adder.inputs[i]);
+    }
+    for (let i = 0; i < adder.outputs.length; i++) {
+      wire(circuit, session, adder.outputs[i], circuit.outputs[i]);
+    }
+
+    // A = 3, B = 1, Cin = 1 → 5. Outputs are S1, S0, Cout.
+    const values = [true, true, false, true, true];
+    for (let i = 0; i < values.length; i++) {
+      driveSource(circuit.inputs[i], values[i]);
+    }
+    stepSimulation(circuit);
+    expect(adder.outputs.map((pin) => pin.signaled)).toEqual([false, true, true]);
+    expect(circuit.outputs.map((pin) => pin.signaled)).toEqual([false, true, true]);
+
+    // A = 1, B = 1, Cin = 0 → 2. Outputs are S1, S0, Cout.
+    driveSource(circuit.inputs[0], false);
+    driveSource(circuit.inputs[2], false);
+    driveSource(circuit.inputs[4], false);
+    stepSimulation(circuit);
+    expect(circuit.outputs.map((pin) => pin.signaled)).toEqual([true, false, false]);
+
+    pointerDown(circuit, layout, session, adder.x + adder.width / 2, adder.y + 40);
+    expect(circuit.selectedElement).toBe(adder);
+    pointerMove(circuit, layout, session, adder.x + adder.width / 2 + 30, adder.y + 60);
+    expect(adder.x).toBe(430);
+    expect(adder.y).toBe(200);
+    expect(adder.outputs[2].x).toBe(430 + adder.width);
+    deleteSelection(circuit);
+    expect(circuit.elements).toHaveLength(0);
+    expect(circuit.inputs.every((pin) => pin.next.length === 0)).toBe(true);
+    expect(circuit.outputs.every((pin) => pin.prev === null && pin.signaled === false)).toBe(true);
+  });
+});
+
 describe('drawing', () => {
   it('paints the initial board without throwing', () => {
     const ops: string[] = [];
@@ -456,6 +553,8 @@ describe('drawing', () => {
     const { circuit, session } = fresh();
     drawScene(canvas, circuit, layout);
     place(circuit, session, 'XOR', 400, 200);
+    place(circuit, session, 'BIT', 400, 300);
+    place(circuit, session, 'ADD2', 400, 400);
     wire(circuit, session, circuit.inputs[0], circuit.elements[0].inputs[0]);
     circuit.elements[0].selected = true;
     circuit.inputs[0].selectedNext = circuit.inputs[0].next[0];

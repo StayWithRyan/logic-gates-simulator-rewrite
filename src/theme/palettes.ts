@@ -21,6 +21,10 @@ export interface Palette {
   orElementsSelectedColor: string;
   xorElementsColor: string;
   xorElementsSelectedColor: string;
+  bitElementsColor: string;
+  bitElementsSelectedColor: string;
+  addElementsColor: string;
+  addElementsSelectedColor: string;
 }
 
 export const PALETTE_STORAGE_KEY = 'logic-gates-palette';
@@ -45,6 +49,10 @@ export const CLASSIC_PALETTE: Palette = {
   orElementsSelectedColor: COLORS.orElementsSelectedColor,
   xorElementsColor: COLORS.xorElementsColor,
   xorElementsSelectedColor: COLORS.xorElementsSelectedColor,
+  bitElementsColor: COLORS.bitElementsColor,
+  bitElementsSelectedColor: COLORS.bitElementsSelectedColor,
+  addElementsColor: COLORS.addElementsColor,
+  addElementsSelectedColor: COLORS.addElementsSelectedColor,
 };
 
 /**
@@ -70,6 +78,10 @@ const SLATE_PALETTE: Palette = {
   orElementsSelectedColor: '#b67dcc',
   xorElementsColor: '#d44b8e',
   xorElementsSelectedColor: '#dc72a6',
+  bitElementsColor: '#c48a1a',
+  bitElementsSelectedColor: '#d4a44a',
+  addElementsColor: '#1a9aaa',
+  addElementsSelectedColor: '#3eb4c0',
 };
 
 /** Warm room. Gate families stay recognizable; chrome goes brown-gray. */
@@ -92,6 +104,10 @@ const DUSK_PALETTE: Palette = {
   orElementsSelectedColor: '#b070b2',
   xorElementsColor: '#c44a7a',
   xorElementsSelectedColor: '#d27098',
+  bitElementsColor: '#b07a28',
+  bitElementsSelectedColor: '#c4984e',
+  addElementsColor: '#2a7a72',
+  addElementsSelectedColor: '#4a948c',
 };
 
 /** Near-black field with the same hues pushed brighter. */
@@ -114,6 +130,10 @@ const INK_PALETTE: Palette = {
   orElementsSelectedColor: '#c86cdc',
   xorElementsColor: '#e04090',
   xorElementsSelectedColor: '#ea68a8',
+  bitElementsColor: '#e0a020',
+  bitElementsSelectedColor: '#f0c050',
+  addElementsColor: '#20b0b8',
+  addElementsSelectedColor: '#48c8ce',
 };
 
 export const PALETTES: readonly Palette[] = [
@@ -139,6 +159,10 @@ export function colorsForKind(palette: Palette, kind: ElementKind): { color: str
       return { color: palette.notElementsColor, selected: palette.notElementsSelectedColor };
     case 'XOR':
       return { color: palette.xorElementsColor, selected: palette.xorElementsSelectedColor };
+    case 'BIT':
+      return { color: palette.bitElementsColor, selected: palette.bitElementsSelectedColor };
+    case 'ADD2':
+      return { color: palette.addElementsColor, selected: palette.addElementsSelectedColor };
     case 'CUSTOM':
       return { color: palette.elementsColor, selected: palette.elementsSelectedColor };
     default: {

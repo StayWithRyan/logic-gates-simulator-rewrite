@@ -39,6 +39,10 @@ describe('color palettes', () => {
     expect(CLASSIC_PALETTE.orElementsSelectedColor).toBe(COLORS.orElementsSelectedColor);
     expect(CLASSIC_PALETTE.xorElementsColor).toBe(COLORS.xorElementsColor);
     expect(CLASSIC_PALETTE.xorElementsSelectedColor).toBe(COLORS.xorElementsSelectedColor);
+    expect(CLASSIC_PALETTE.bitElementsColor).toBe(COLORS.bitElementsColor);
+    expect(CLASSIC_PALETTE.bitElementsSelectedColor).toBe(COLORS.bitElementsSelectedColor);
+    expect(CLASSIC_PALETTE.addElementsColor).toBe(COLORS.addElementsColor);
+    expect(CLASSIC_PALETTE.addElementsSelectedColor).toBe(COLORS.addElementsSelectedColor);
     expect(DEFAULT_PALETTE_ID).toBe('classic');
   });
 
@@ -55,6 +59,8 @@ describe('color palettes', () => {
     expect(colorsForKind(CLASSIC_PALETTE, 'OR').color).toBe('#8d4da4');
     expect(colorsForKind(CLASSIC_PALETTE, 'NOT').color).toBe('#891f1b');
     expect(colorsForKind(CLASSIC_PALETTE, 'XOR').color).toBe('#bb3a78');
+    expect(colorsForKind(CLASSIC_PALETTE, 'BIT').color).toBe(COLORS.bitElementsColor);
+    expect(colorsForKind(CLASSIC_PALETTE, 'ADD2').color).toBe(COLORS.addElementsColor);
     expect(colorsForKind(CLASSIC_PALETTE, 'CUSTOM')).toEqual({
       color: COLORS.elementsColor,
       selected: COLORS.elementsSelectedColor,
