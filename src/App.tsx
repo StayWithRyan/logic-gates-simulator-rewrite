@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import { ModalCreatingElement } from './components/ModalCreatingElement';
+import { PaletteSwitcher } from './components/PaletteSwitcher';
 import { createLayout, type Layout } from './layout';
 import { drawScene } from './render/draw';
 import { createInitialCircuit } from './simulation/circuit';
@@ -15,6 +16,20 @@ import {
 import { SIMULATION_INTERVAL_MS, stepSimulation } from './simulation/simulate';
 import type { Circuit } from './simulation/types';
 import { deleteSelection } from './simulation/wiring';
+import {
+  paletteById,
+  readStoredPaletteId,
+  writeStoredPaletteId,
+  type Palette,
+} from './theme/palettes';
+
+function paletteStorage(): Pick<Storage, 'getItem' | 'setItem'> | null {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
 
 function mousePosition(canvas: HTMLCanvasElement, event: { clientX: number; clientY: number }): [number, number] {
   return [event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop];
@@ -36,6 +51,19 @@ export function App() {
   }
   const layout = layoutRef.current;
   const [modalOpen, setModalOpen] = useState(false);
+  const storageRef = useRef(paletteStorage());
+  const [paletteId, setPaletteId] = useState(() =>
+    storageRef.current ? readStoredPaletteId(storageRef.current) : 'classic',
+  );
+  const palette = paletteById(paletteId);
+  const paletteRef = useRef<Palette>(palette);
+  paletteRef.current = palette;
+
+  useEffect(() => {
+    if (storageRef.current) {
+      writeStoredPaletteId(storageRef.current, paletteId);
+    }
+  }, [paletteId]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -45,7 +73,7 @@ export function App() {
       if (!canvas || !circuit || !currentLayout) {
         return;
       }
-      drawScene(canvas, circuit, currentLayout);
+      drawScene(canvas, circuit, currentLayout, paletteRef.current);
       stepSimulation(circuit);
     }, SIMULATION_INTERVAL_MS);
     return () => window.clearInterval(intervalId);
@@ -92,6 +120,7 @@ export function App() {
     <>
       {modalOpen && (
         <ModalCreatingElement
+          palette={palette}
           onNameChange={(name) => {
             const circuit = circuitRef.current;
             if (circuit) {
@@ -100,6 +129,7 @@ export function App() {
           }}
         />
       )}
+      <PaletteSwitcher palette={palette} onChange={setPaletteId} />
       <canvas
         ref={canvasRef}
         height={layout.viewportHeight}

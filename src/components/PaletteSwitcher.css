@@ -1,0 +1,33 @@
+.palette-switcher {
+    position: fixed;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    max-width: calc(100vw - 96px);
+    padding: 4px;
+    border: 2px solid;
+    box-sizing: border-box;
+}
+
+.palette-switcher button {
+    appearance: none;
+    margin: 0;
+    padding: 4px 10px;
+    border: 2px solid;
+    color: white;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.palette-switcher button:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 1px;
+}
