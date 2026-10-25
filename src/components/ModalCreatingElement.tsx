@@ -1,11 +1,12 @@
-import { COLORS } from '../layout';
+import type { Palette } from '../theme/palettes';
 import './ModalCreatingElement.css';
 
 interface ModalCreatingElementProps {
+  palette: Palette;
   onNameChange: (name: string) => void;
 }
 
-export function ModalCreatingElement({ onNameChange }: ModalCreatingElementProps) {
+export function ModalCreatingElement({ palette, onNameChange }: ModalCreatingElementProps) {
   return (
     <div className="modal">
       <input
@@ -13,8 +14,8 @@ export function ModalCreatingElement({ onNameChange }: ModalCreatingElementProps
         className="textBox"
         placeholder="Element name"
         style={{
-          borderBottom: `5px solid ${COLORS.elementsColor}`,
-          backgroundColor: COLORS.backgroundColor,
+          borderBottom: `5px solid ${palette.elementsColor}`,
+          backgroundColor: palette.backgroundColor,
           color: 'white',
         }}
         onChange={(event) => onNameChange(event.target.value)}
