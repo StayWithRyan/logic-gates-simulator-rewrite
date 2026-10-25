@@ -3,7 +3,7 @@ import { createBuiltinElement, gateHeight, gateLogic, gateWidth, instantiateCust
 import { connectOriented } from './wiring';
 import type { BuiltinKind } from './types';
 
-const cases: Record<BuiltinKind, [boolean, boolean, boolean][]> = {
+const cases: Record<Exclude<BuiltinKind, 'NOT' | 'BIT' | 'ADD2'>, [boolean, boolean, boolean][]> = {
   AND: [
     [false, false, false],
     [false, true, false],
@@ -22,7 +22,6 @@ const cases: Record<BuiltinKind, [boolean, boolean, boolean][]> = {
     [true, false, true],
     [true, true, false],
   ],
-  NOT: [],
 };
 
 describe('gate logic', () => {

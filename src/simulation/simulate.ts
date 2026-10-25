@@ -1,7 +1,10 @@
 import { applyElementSignal } from './gates';
 import type { Circuit } from './types';
 
-/** One left-to-right pass, matching the original 10ms `updateGates` tick. */
+/**
+ * One left-to-right pass, matching the original 10ms `updateGates` tick.
+ * BIT latches keep `storedBit` on the element between passes.
+ */
 export function stepSimulation(circuit: Pick<Circuit, 'elements'>): void {
   for (const element of circuit.elements) {
     applyElementSignal(element);

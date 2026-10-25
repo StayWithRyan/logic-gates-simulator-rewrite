@@ -16,6 +16,10 @@ export const COLORS = {
   orElementsSelectedColor: '#956da3',
   xorElementsColor: '#bb3a78',
   xorElementsSelectedColor: '#ba5f8b',
+  bitElementsColor: '#9a6b12',
+  bitElementsSelectedColor: '#b08a3a',
+  addElementsColor: '#1f6f78',
+  addElementsSelectedColor: '#3d868e',
 } as const;
 
 export const FIELD_IO_SIZE = 40;

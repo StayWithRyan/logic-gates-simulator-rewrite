@@ -2,6 +2,26 @@ import { BUTTON_SIZE, COLORS, type Layout } from '../layout';
 import type { Circuit, SinkPort, SourcePort, SpawnPreview } from '../simulation/types';
 
 const LABEL_FONT = '36px Roboto Mono';
+const PIN_LABEL_FONT = '12px Roboto Mono';
+
+function paintPinLabel(
+  context: CanvasRenderingContext2D,
+  label: string,
+  x: number,
+  y: number,
+  align: CanvasTextAlign,
+): void {
+  if (!label) {
+    return;
+  }
+  context.font = PIN_LABEL_FONT;
+  context.fillStyle = 'white';
+  context.textAlign = align;
+  context.textBaseline = 'middle';
+  context.fillText(label, x, y);
+  context.textAlign = 'start';
+  context.textBaseline = 'alphabetic';
+}
 
 function paintLabel(
   context: CanvasRenderingContext2D,
@@ -166,6 +186,12 @@ export function drawScene(canvas: HTMLCanvasElement, circuit: Circuit, layout: L
       context.fill();
     }
     paintLabel(context, element.name, element.x, element.y, element.width, element.height);
+    for (const input of element.inputs) {
+      paintPinLabel(context, input.label, input.x + 16, input.y, 'left');
+    }
+    for (const output of element.outputs) {
+      paintPinLabel(context, output.label, output.x - 16, output.y, 'right');
+    }
   }
 
   for (const output of circuit.outputs) {

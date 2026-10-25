@@ -1,11 +1,49 @@
 import { COLORS, GATE_IO_MARGIN, GATE_IO_SIZE } from '../layout';
-import type { BuiltinKind, ElementKind, GateInput, GateOutput, LogicElement, SourcePort } from './types';
+import type {
+  BuiltinKind,
+  CombinationalKind,
+  ElementKind,
+  GateInput,
+  GateOutput,
+  LogicElement,
+  SourcePort,
+} from './types';
 
 const INPUT_COUNTS: Record<BuiltinKind, number> = {
   AND: 2,
   OR: 2,
   NOT: 1,
   XOR: 2,
+  BIT: 2,
+  ADD2: 5,
+};
+
+const OUTPUT_COUNTS: Record<BuiltinKind, number> = {
+  AND: 1,
+  OR: 1,
+  NOT: 1,
+  XOR: 1,
+  BIT: 1,
+  ADD2: 3,
+};
+
+/** Top-to-bottom pin names. Empty entries stay unlabeled, matching the original gates. */
+const INPUT_LABELS: Record<BuiltinKind, readonly string[]> = {
+  AND: [],
+  OR: [],
+  NOT: [],
+  XOR: [],
+  BIT: ['D', 'EN'],
+  ADD2: ['A1', 'A0', 'B1', 'B0', 'Cin'],
+};
+
+const OUTPUT_LABELS: Record<BuiltinKind, readonly string[]> = {
+  AND: [],
+  OR: [],
+  NOT: [],
+  XOR: [],
+  BIT: ['Q'],
+  ADD2: ['S1', 'S0', 'Cout'],
 };
 
 const GATE_COLORS: Record<BuiltinKind, { color: string; selected: string }> = {
@@ -13,7 +51,12 @@ const GATE_COLORS: Record<BuiltinKind, { color: string; selected: string }> = {
   OR: { color: COLORS.orElementsColor, selected: COLORS.orElementsSelectedColor },
   NOT: { color: COLORS.notElementsColor, selected: COLORS.notElementsSelectedColor },
   XOR: { color: COLORS.xorElementsColor, selected: COLORS.xorElementsSelectedColor },
+  BIT: { color: COLORS.bitElementsColor, selected: COLORS.bitElementsSelectedColor },
+  ADD2: { color: COLORS.addElementsColor, selected: COLORS.addElementsSelectedColor },
 };
+
+/** Extra body width so ADD2's Cin/Cout labels sit clear of the centered title. */
+const ADD2_BODY_PADDING = 48;
 
 export function gateWidth(name: string): number {
   return name.length * 24 + 100;
@@ -28,7 +71,7 @@ export function gateHeight(ioMax: number): number {
 }
 
 /** Boolean gate functions. Loops match the original (no short-circuit). */
-export function gateLogic(kind: BuiltinKind, inputs: boolean[]): boolean {
+export function gateLogic(kind: CombinationalKind, inputs: boolean[]): boolean {
   switch (kind) {
     case 'AND': {
       let result = true;
@@ -106,6 +149,9 @@ interface ElementSpec {
   name: string;
   inputCount: number;
   outputCount: number;
+  inputLabels: readonly string[];
+  outputLabels: readonly string[];
+  extraWidth: number;
   color: string;
   selectedColor: string;
   combinations: boolean[][];
@@ -115,7 +161,14 @@ interface ElementSpec {
 function createShell(spec: ElementSpec): LogicElement {
   const inputs: GateInput[] = [];
   for (let i = 0; i < spec.inputCount; i++) {
-    inputs.push({ kind: 'gate-input', x: 0, y: 0, signaled: false, prev: null });
+    inputs.push({
+      kind: 'gate-input',
+      x: 0,
+      y: 0,
+      signaled: false,
+      prev: null,
+      label: spec.inputLabels[i] ?? '',
+    });
   }
   const outputs: GateOutput[] = [];
   for (let i = 0; i < spec.outputCount; i++) {
@@ -126,6 +179,7 @@ function createShell(spec: ElementSpec): LogicElement {
       signaled: false,
       next: [],
       selectedNext: null,
+      label: spec.outputLabels[i] ?? '',
     });
   }
   return {
@@ -133,7 +187,7 @@ function createShell(spec: ElementSpec): LogicElement {
     name: spec.name,
     x: 0,
     y: 0,
-    width: gateWidth(spec.name),
+    width: gateWidth(spec.name) + spec.extraWidth,
     height: gateHeight(Math.max(spec.inputCount, spec.outputCount)),
     inputs,
     outputs,
@@ -144,6 +198,7 @@ function createShell(spec: ElementSpec): LogicElement {
     outputsCount: spec.outputCount,
     combinations: spec.combinations,
     results: spec.results,
+    storedBit: false,
   };
 }
 
@@ -153,7 +208,10 @@ export function createBuiltinElement(kind: BuiltinKind, x: number, y: number): L
     kind,
     name: kind,
     inputCount: INPUT_COUNTS[kind],
-    outputCount: 1,
+    outputCount: OUTPUT_COUNTS[kind],
+    inputLabels: INPUT_LABELS[kind],
+    outputLabels: OUTPUT_LABELS[kind],
+    extraWidth: kind === 'ADD2' ? ADD2_BODY_PADDING : 0,
     color: colors.color,
     selectedColor: colors.selected,
     combinations: [],
@@ -177,6 +235,9 @@ export function instantiateCustom(template: CustomTemplate, x: number, y: number
     name: template.name,
     inputCount: template.inputsCount,
     outputCount: template.outputsCount,
+    inputLabels: [],
+    outputLabels: [],
+    extraWidth: 0,
     color: COLORS.elementsColor,
     selectedColor: COLORS.elementsSelectedColor,
     combinations: template.combinations,
@@ -206,11 +267,59 @@ function applyCustomSignal(element: LogicElement): void {
   }
 }
 
-export function applyElementSignal(element: LogicElement): void {
-  if (element.kind === 'CUSTOM') {
-    applyCustomSignal(element);
-    return;
+/**
+ * BIT is a level-sensitive D latch. Pins, top to bottom: D, EN, and output Q.
+ * While EN is high, this tick stores D and drives Q with it. While EN is low,
+ * Q keeps the bit stored on the element and D is ignored. The bit starts at 0.
+ * Q updates in element-list order, same as the other gates.
+ */
+function applyBitStore(element: LogicElement): void {
+  if (element.inputs[1].signaled) {
+    element.storedBit = element.inputs[0].signaled;
   }
-  const inputs = element.inputs.map((input) => input.signaled);
-  driveSource(element.outputs[0], gateLogic(element.kind, inputs));
+  driveSource(element.outputs[0], element.storedBit);
+}
+
+/**
+ * ADD2 adds two 2-bit numbers and a carry-in.
+ * Inputs, top to bottom: A1, A0, B1, B0, Cin. A1 and B1 are the high bits.
+ * Outputs, top to bottom: S1, S0, Cout. Sum = A + B + Cin, in 0..7.
+ */
+function applyAdd2(element: LogicElement): void {
+  const a1 = element.inputs[0].signaled;
+  const a0 = element.inputs[1].signaled;
+  const b1 = element.inputs[2].signaled;
+  const b0 = element.inputs[3].signaled;
+  const cin = element.inputs[4].signaled;
+  const low = (a0 ? 1 : 0) + (b0 ? 1 : 0) + (cin ? 1 : 0);
+  const high = (low >> 1) + (a1 ? 1 : 0) + (b1 ? 1 : 0);
+  driveSource(element.outputs[0], (high & 1) === 1);
+  driveSource(element.outputs[1], (low & 1) === 1);
+  driveSource(element.outputs[2], (high >> 1) === 1);
+}
+
+export function applyElementSignal(element: LogicElement): void {
+  switch (element.kind) {
+    case 'CUSTOM':
+      applyCustomSignal(element);
+      return;
+    case 'BIT':
+      applyBitStore(element);
+      return;
+    case 'ADD2':
+      applyAdd2(element);
+      return;
+    case 'AND':
+    case 'OR':
+    case 'NOT':
+    case 'XOR': {
+      const inputs = element.inputs.map((input) => input.signaled);
+      driveSource(element.outputs[0], gateLogic(element.kind, inputs));
+      return;
+    }
+    default: {
+      const unreachable: never = element.kind;
+      return unreachable;
+    }
+  }
 }
