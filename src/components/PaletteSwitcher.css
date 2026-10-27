@@ -1,33 +1,58 @@
 .palette-switcher {
     position: fixed;
-    top: 8px;
+    top: 14px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 2;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 4px;
-    max-width: calc(100vw - 96px);
-    padding: 4px;
-    border: 2px solid;
+    gap: 8px;
+    max-width: calc(100vw - 120px);
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: 999px;
     box-sizing: border-box;
+    backdrop-filter: blur(18px) saturate(1.45);
+    -webkit-backdrop-filter: blur(18px) saturate(1.45);
+    box-shadow:
+        0 16px 40px rgba(0, 0, 0, 0.32),
+        inset 0 1px 0 rgba(255, 255, 255, 0.42);
+    user-select: none;
 }
 
 .palette-switcher button {
     appearance: none;
     margin: 0;
-    padding: 4px 10px;
-    border: 2px solid;
+    padding: 8px 14px 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
     color: white;
-    font-family: 'Roboto Mono', monospace;
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1.2;
+    font-family: Outfit, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 120ms ease;
+}
+
+.palette-switcher button:hover {
+    transform: translateY(-1px);
 }
 
 .palette-switcher button:focus-visible {
     outline: 2px solid white;
-    outline-offset: 1px;
+    outline-offset: 2px;
+}
+
+.palette-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: block;
+    flex: none;
 }

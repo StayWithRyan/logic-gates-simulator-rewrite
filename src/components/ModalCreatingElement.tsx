@@ -1,4 +1,5 @@
 import type { Palette } from '../theme/palettes';
+import { withAlpha } from '../theme/tint';
 import './ModalCreatingElement.css';
 
 interface ModalCreatingElementProps {
@@ -9,17 +10,28 @@ interface ModalCreatingElementProps {
 export function ModalCreatingElement({ palette, onNameChange }: ModalCreatingElementProps) {
   return (
     <div className="modal">
-      <input
-        type="text"
-        className="textBox"
-        placeholder="Element name"
+      <div
+        className="modal-card"
         style={{
-          borderBottom: `5px solid ${palette.elementsColor}`,
-          backgroundColor: palette.backgroundColor,
-          color: 'white',
+          backgroundColor: withAlpha(palette.backgroundColor, 0.46),
+          borderColor: withAlpha(palette.elementsSelectedColor, 0.95),
+          boxShadow: `0 30px 80px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 0 1px ${withAlpha(palette.elementsColor, 0.35)}`,
         }}
-        onChange={(event) => onNameChange(event.target.value)}
-      />
+      >
+        <p className="modal-kicker">Custom element</p>
+        <input
+          type="text"
+          className="textBox"
+          placeholder="Element name"
+          style={{
+            borderBottom: `2px solid ${palette.elementsColor}`,
+            backgroundColor: 'transparent',
+            color: 'white',
+            caretColor: palette.signalColor,
+          }}
+          onChange={(event) => onNameChange(event.target.value)}
+        />
+      </div>
     </div>
   );
 }
