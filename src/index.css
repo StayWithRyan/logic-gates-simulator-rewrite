@@ -2,4 +2,10 @@ body {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    background: #12141c;
+    font-family: Outfit, 'Segoe UI', sans-serif;
+}
+
+canvas {
+    display: block;
 }
